@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.function.BinaryOperator;
 
 class SegmentTree<T> {
@@ -13,6 +14,7 @@ class SegmentTree<T> {
         this.NEUTRAL_ELEMENT = neutralElement;
         this.merge = merge;
         this.segmentTree = (T[]) new Object[4 * n];
+        Arrays.fill(segmentTree, NEUTRAL_ELEMENT);
     }
 
     private void updateSeg(int index, T value, int x, int lx, int rx) {
