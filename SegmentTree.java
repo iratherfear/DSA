@@ -1,49 +1,58 @@
-public class SegmentTree {
-    private int N;
-    private record Node() {}
-    private final Node NEUTRAL_ELEMENT = null;
-    private Node[] segment_tree;
-    private Node merge(Node left, Node right) {
-        throw new RuntimeException("Merge function not defined");
-    }
+import java.util.function.BinaryOperator;
 
-    public SegmentTree(int n) {
+class SegmentTree<T> {
+
+    private final int N;
+    private final T NEUTRAL_ELEMENT;
+    private final T[] segmentTree;
+    private final BinaryOperator<T> merge;
+
+    @SuppressWarnings("unchecked")
+    public SegmentTree(int n, T neutralElement, BinaryOperator<T> merge) {
         this.N = n;
-        segment_tree = new Node[N];
+        this.NEUTRAL_ELEMENT = neutralElement;
+        this.merge = merge;
+        this.segmentTree = (T[]) new Object[4 * n];
     }
 
-    private void updateSeg(int index, Node value, int x, int lx, int rx) {
-        if(rx - lx == 1) {
-            segment_tree[x] = value;
+    private void updateSeg(int index, T value, int x, int lx, int rx) {
+        if (rx - lx == 1) {
+            segmentTree[x] = value;
             return;
         }
 
         int mid = (lx + rx) / 2;
-        if(index < mid) {
+        if (index < mid) {
             updateSeg(index, value, 2 * x + 1, lx, mid);
         } else {
             updateSeg(index, value, 2 * x + 2, mid, rx);
         }
-        segment_tree[index] = merge(segment_tree[2 * x + 1], segment_tree[2 * x + 2]);
+
+        segmentTree[x] = merge.apply(
+                segmentTree[2 * x + 1],
+                segmentTree[2 * x + 2]
+        );
     }
 
-    public void update(int index, Node value) {
-        updateSeg(index, value, 0, 0, N - 1);
+    public void update(int index, T value) {
+        updateSeg(index, value, 0, 0, N);
     }
 
-    private Node getValue(int l, int r, int x, int lx, int rx) {
-        if(rx <= l || r <= lx) {
+    private T query(int l, int r, int x, int lx, int rx) {
+        if (rx <= l || r <= lx) {
             return NEUTRAL_ELEMENT;
         }
-        if(l <= lx && rx <= r) {
-            return segment_tree[x];
+        if (l <= lx && rx <= r) {
+            return segmentTree[x];
         }
+
         int mid = (lx + rx) / 2;
-        segment_tree[x] = merge(getValue(l, r, 2 * x, lx, mid), getValue(l, r, 2 * x + 2, mid, rx));
-        return segment_tree[x];
+        T left = query(l, r, 2 * x + 1, lx, mid);
+        T right = query(l, r, 2 * x + 2, mid, rx);
+        return merge.apply(left, right);
     }
 
-    public Node get(int l, int r) {
-        return getValue(l, r, 0, 0, N - 1);
+    public T get(int l, int r) {
+        return query(l, r, 0, 0, N);
     }
 }
